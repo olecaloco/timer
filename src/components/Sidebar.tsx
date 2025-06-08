@@ -68,7 +68,7 @@ const Sidebar: React.FC<Props> = ({ currentPage, changePage, onLogout }) => (
             </Nav.Item>
         </Nav>
         {currentPage !== "login" && (
-            <Nav variant="pills" className="flex-column">
+            <Nav variant="pills" className="flex-column gap-2">
                 <Nav.Item>
                     <Nav.Link
                         className={`

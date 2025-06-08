@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Unsubscribe } from "firebase/firestore";
 import { differenceInSeconds } from "date-fns";
 import { addEntry, startTimer, stopTimer } from "../../api";
@@ -20,6 +20,8 @@ import {
 const Home = () => {
     const today = new Date();
 
+    const workerRef = useRef<Worker | null>(null);
+
     const [date, setDate] = useState(today);
     const [timerDate, setTimerDate] = useState(today);
     const [entries, setEntries] = useState<Entry[]>([]);
@@ -33,36 +35,43 @@ const Home = () => {
     const selectedValue = formatToHTMLDateValue(date);
     const maxInputMonth = formatToHTMLDateValue(today);
 
-    const worker: Worker = useMemo(
-        () => new Worker(new URL("../../worker.js", import.meta.url)),
-        []
-    );
+    useEffect(() => {
+        workerRef.current = new Worker(
+            new URL("../../worker.js", import.meta.url)
+        );
+
+        return () => {
+            workerRef.current?.terminate();
+        };
+    }, []);
 
     useEffect(() => {
-        if (worker) {
-            worker.onmessage = function (ev) {
-                if (ev.data === "start" || ev.data === "stop") return;
+        if (workerRef.current === null) return;
 
-                setElapsedSeconds((c) => {
-                    const newCount = c + 1;
-                    const { seconds, minutes, hours } =
-                        convertToHumanTime(newCount);
-                    document.title = `Timer - ${hours}:${minutes}:${seconds}`;
-                    return newCount;
-                });
-            };
-        }
+        workerRef.current.onmessage = function (ev) {
+            if (ev.data === "start" || ev.data === "stop") return;
+
+            setElapsedSeconds((c) => {
+                const newCount = c + 1;
+                const { seconds, minutes, hours } =
+                    convertToHumanTime(newCount);
+                document.title = `Timer - ${hours}:${minutes}:${seconds}`;
+                return newCount;
+            });
+        };
     }, []);
 
     // Fetch server timer status
     useEffect(() => {
+        if (workerRef.current === null) return;
+
         const isRunning = window.localStorage.getItem("isRunning");
         const _startedAt = window.localStorage.getItem("startedAt");
         const _timerStartTime = window.localStorage.getItem("timerStartTime");
         const _description = window.localStorage.getItem("description");
 
         if (!isRunning || isRunning !== "true") {
-            worker.postMessage("stop");
+            workerRef.current.postMessage("stop");
             return;
         }
 
@@ -75,7 +84,7 @@ const Home = () => {
         setDescription(_description ?? "");
         setElapsedSeconds(e);
 
-        worker.postMessage("start");
+        workerRef.current.postMessage("start");
     }, []);
 
     // Retrieve all current entries
@@ -133,6 +142,8 @@ const Home = () => {
     const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
+        if (workerRef.current === null) return;
+
         const now = new Date();
         timerDate.setHours(now.getHours());
         timerDate.setMinutes(now.getMinutes());
@@ -144,11 +155,11 @@ const Home = () => {
             setLoading(true);
 
             await startTimer(description, timerDate);
-            worker.postMessage("start");
+            workerRef.current.postMessage("start");
 
             setLoading(false);
         } else {
-            worker.postMessage("stop");
+            workerRef.current.postMessage("stop");
             setLoading(true);
 
             await addEntry(description, elapsedSeconds);

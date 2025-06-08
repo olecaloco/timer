@@ -4,12 +4,12 @@ import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyArJy-zAv_x0lyC5IxdU6GyNqrDG2a7YC8",
-    authDomain: "timer-f60f4.firebaseapp.com",
-    projectId: "timer-f60f4",
-    storageBucket: "timer-f60f4.firebasestorage.app",
-    messagingSenderId: "1066620665497",
-    appId: "1:1066620665497:web:f68a8fb2a11e49b7324208",
+    apiKey: "",
+    authDomain: "",
+    projectId: "",
+    storageBucket: "",
+    messagingSenderId: "",
+    appId: "",
 };
 
 export const app = initializeApp(firebaseConfig);

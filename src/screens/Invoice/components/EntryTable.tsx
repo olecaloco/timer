@@ -15,7 +15,7 @@ const EntryTable: React.FC<Props> = ({ entries, priceAsText }) => {
     }, 0);
 
     return (
-        <Table id="table-2" className="mt-4" striped bordered hover responsive>
+        <Table id="table-2" striped bordered hover responsive>
             <thead className="table-light">
                 <tr>
                     <th>Description</th>
@@ -25,6 +25,13 @@ const EntryTable: React.FC<Props> = ({ entries, priceAsText }) => {
                 </tr>
             </thead>
             <tbody>
+                {entries.length === 0 && (
+                    <tr>
+                        <td colSpan={4} className="text-center">
+                            No entries for this month
+                        </td>
+                    </tr>
+                )}
                 {entries.map((entry) => (
                     <EntryItem
                         key={entry.id}

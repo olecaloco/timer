@@ -17,8 +17,11 @@ import {
 } from "../../helpers";
 import { Unsubscribe } from "firebase/firestore";
 import { Entry } from "../../api/models";
+import { useAuth } from "../../contexts/auth";
+import { Alert } from "react-bootstrap";
 
 const Invoice = () => {
+    const { userDetails, clientDetails } = useAuth();
     const [priceAsText, setPriceAsText] = useState(false);
     const [date, setDate] = useState(new Date());
     const [entries, setEntries] = useState<Entry[]>([]);
@@ -103,11 +106,14 @@ const Invoice = () => {
                 theme: "plain",
                 head: [["Bill from", "Bill to"]],
                 body: [
-                    ["Your Name", "Client's Name"],
+                    [userDetails?.name ?? "", clientDetails?.name ?? ""],
                     ["", ""],
-                    ["Your address line 1", "Clien't address line 1"],
-                    ["Your City, State, Zip", "Client's City, State, Zip"],
-                    ["Your Country", "Client's Country"],
+                    [userDetails?.address ?? "", clientDetails?.address ?? ""],
+                    [
+                        `${userDetails?.city}, ${userDetails?.state}, ${userDetails?.zip}`,
+                        `${clientDetails?.city}, ${clientDetails?.state}, ${clientDetails?.zip}`,
+                    ],
+                    [userDetails?.country ?? "", clientDetails?.country ?? ""],
                 ],
             });
 
@@ -186,6 +192,7 @@ const Invoice = () => {
         <Container fluid>
             <div className="d-flex align-items-center justify-content-between mt-2">
                 <h2>Invoice</h2>
+
                 <div className="d-flex align-items-center gap-2">
                     <FormControl
                         type="month"
@@ -200,6 +207,10 @@ const Invoice = () => {
                     </Button>
                 </div>
             </div>
+
+            <Alert variant="info" className="mt-2">
+                The app currently only supports USD currency.
+            </Alert>
 
             <EntryTable entries={entries} priceAsText={priceAsText} />
         </Container>

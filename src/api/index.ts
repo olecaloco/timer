@@ -1,4 +1,5 @@
 import { calculateAmount, calculateTotalHours } from "../helpers";
+import { ClientDetails, UserDetails } from "./models";
 
 export const startTimer = async (
     description: string,
@@ -122,4 +123,44 @@ export const deleteEntry = async (id: string) => {
 
     const ref = doc(db, "entries", id);
     return await deleteDoc(ref);
+};
+
+export const getUserDetails = async () => {
+    const { doc, getDoc } = await import("firebase/firestore");
+    const { auth, db } = await import("../firebase");
+
+    if (!auth.currentUser) throw new Error("No logged in user");
+
+    const ref = doc(db, "users", auth.currentUser.uid);
+    return await getDoc(ref);
+};
+
+export const getClientDetails = async () => {
+    const { doc, getDoc } = await import("firebase/firestore");
+    const { auth, db } = await import("../firebase");
+
+    if (!auth.currentUser) throw new Error("No logged in user");
+
+    const ref = doc(db, "clients", auth.currentUser.uid);
+    return await getDoc(ref);
+};
+
+export const updateUserDetails = async (data: UserDetails) => {
+    const { collection, doc, setDoc } = await import("firebase/firestore");
+    const { auth, db } = await import("../firebase");
+
+    if (!auth.currentUser) throw new Error("No logged in user");
+
+    const ref = doc(collection(db, "users"), auth.currentUser.uid);
+    return await setDoc(ref, data);
+};
+
+export const updateClientDetails = async (data: ClientDetails) => {
+    const { collection, doc, setDoc } = await import("firebase/firestore");
+    const { auth, db } = await import("../firebase");
+
+    if (!auth.currentUser) throw new Error("No logged in user");
+
+    const ref = doc(collection(db, "clients"), auth.currentUser.uid);
+    return await setDoc(ref, data);
 };
