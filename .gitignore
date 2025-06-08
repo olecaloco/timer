@@ -7,7 +7,7 @@
 
 # firebase
 .firebase
-firebase.ts
+/src/firebase.ts
 
 # testing
 /coverage
