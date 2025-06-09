@@ -10,7 +10,7 @@ import { updateClientDetails } from "../../api";
 import { useAuth } from "../../contexts/auth";
 
 export default function ClientForm(): ReactElement {
-    const { clientDetails } = useAuth();
+    const { clientDetails, setUpdateDetailsFlag } = useAuth();
     const [loading, setLoading] = useState<boolean>(false);
     const [validated, setValidated] = useState<boolean>(false);
 
@@ -39,6 +39,7 @@ export default function ClientForm(): ReactElement {
 
         try {
             await updateClientDetails(data);
+            setUpdateDetailsFlag(true);
         } catch (error) {
             console.error(error);
         } finally {

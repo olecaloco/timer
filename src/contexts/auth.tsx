@@ -1,5 +1,6 @@
 import {
     createContext,
+    Dispatch,
     PropsWithChildren,
     ReactElement,
     useContext,
@@ -16,6 +17,7 @@ export interface AuthContextProps {
     loading: boolean;
     userDetails: UserDetails | null;
     clientDetails: ClientDetails | null;
+    setUpdateDetailsFlag: Dispatch<boolean>;
 }
 
 const AuthContext = createContext<AuthContextProps>({
@@ -23,12 +25,14 @@ const AuthContext = createContext<AuthContextProps>({
     loading: false,
     userDetails: null,
     clientDetails: null,
+    setUpdateDetailsFlag: (update: boolean) => {},
 });
 
 interface Props extends PropsWithChildren {}
 
 export default function AuthProvider(props: Props): ReactElement {
     const [user, setUser] = useState<User | null>(null);
+    const [updateDetailsFlag, setUpdateDetailsFlag] = useState<boolean>(false);
     const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
     const [clientDetails, setClientDetails] = useState<ClientDetails | null>(
         null
@@ -44,6 +48,7 @@ export default function AuthProvider(props: Props): ReactElement {
             return onAuthStateChanged(auth, (userState) => {
                 setUser(userState);
                 setLoading(false);
+                setUpdateDetailsFlag(true);
             });
         };
 
@@ -60,7 +65,7 @@ export default function AuthProvider(props: Props): ReactElement {
     }, []);
 
     useEffect(() => {
-        if (!loading && !user) return;
+        if (!updateDetailsFlag || !user) return;
 
         getUserDetails().then((snapshot) => {
             if (!snapshot.exists()) {
@@ -79,11 +84,19 @@ export default function AuthProvider(props: Props): ReactElement {
                 setClientDetails(details);
             }
         });
-    }, [loading, user]);
+
+        setUpdateDetailsFlag(false);
+    }, [updateDetailsFlag, user]);
 
     const value = useMemo(
-        () => ({ user, userDetails, clientDetails, loading }),
-        [user, userDetails, clientDetails, loading]
+        () => ({
+            user,
+            userDetails,
+            clientDetails,
+            loading,
+            setUpdateDetailsFlag,
+        }),
+        [user, userDetails, clientDetails, loading, setUpdateDetailsFlag]
     );
 
     return (
