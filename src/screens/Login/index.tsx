@@ -1,9 +1,7 @@
 import { useState } from "react";
 import Button from "react-bootstrap/Button";
-import { useAuth } from "../../contexts/auth";
 
 const Login = () => {
-    const { loading: userFetchLoading } = useAuth();
     const [loading, setLoading] = useState(false);
 
     const onLogin = async () => {
@@ -27,11 +25,7 @@ const Login = () => {
         <div className="d-flex align-items-center justify-content-center flex-column gap-2 w-100 h-100">
             <h1>Welcome to Timeria</h1>
             <p>A simple single client timer app with invoicing.</p>
-            <Button
-                variant="light"
-                onClick={onLogin}
-                disabled={loading || userFetchLoading}
-            >
+            <Button variant="light" onClick={onLogin} disabled={loading}>
                 <svg
                     width="20"
                     height="20"

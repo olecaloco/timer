@@ -7,6 +7,7 @@ import Settings from "./screens/Settings";
 import AppSidebar from "./components/Sidebar";
 import { Page } from "./api/models";
 import { Container } from "react-bootstrap";
+import { Route, Switch, useLocation } from "wouter";
 
 const pages = {
     home: <Home />,
@@ -16,16 +17,16 @@ const pages = {
 };
 
 export default function Main() {
-    const [page, setPage] = useState<Page>("login");
+    const [location, navigate] = useLocation();
     const { user } = useAuth();
 
     useEffect(() => {
         if (!user) {
-            setPage("login");
+            navigate("/login");
         } else {
-            if (page === "login") setPage("home");
+            if (location === "/login") navigate("/");
         }
-    }, [page, user]);
+    }, [location, user]);
 
     const onLogout = async () => {
         try {
@@ -33,27 +34,25 @@ export default function Main() {
             const { auth } = await import("./firebase");
 
             await signOut(auth);
-            setPage("login");
+            navigate("/login");
         } catch (e) {
             console.error(e);
         }
     };
 
-    const changePage = (value: Page) => {
-        setPage(value);
-    };
-
     return (
         <Container className="d-flex h-100">
-            {user && (
-                <AppSidebar
-                    currentPage={page}
-                    changePage={changePage}
-                    onLogout={onLogout}
-                />
-            )}
+            {user && <AppSidebar onLogout={onLogout} />}
 
-            <section className="content">{pages[page]}</section>
+            <section className="content">
+                <Switch>
+                    <Route path="/" component={Home} />
+                    <Route path="/login" component={Login} />
+                    <Route path="/invoice" component={Invoice} />
+                    <Route path="/settings" component={Settings} />
+                    <Route>404: No such page!</Route>
+                </Switch>
+            </section>
         </Container>
     );
 }

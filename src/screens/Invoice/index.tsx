@@ -110,8 +110,12 @@ const Invoice = () => {
                     ["", ""],
                     [userDetails?.address ?? "", clientDetails?.address ?? ""],
                     [
-                        `${userDetails?.city}, ${userDetails?.state}, ${userDetails?.zip}`,
-                        `${clientDetails?.city}, ${clientDetails?.state}, ${clientDetails?.zip}`,
+                        `${userDetails?.city ?? ""}, ${
+                            userDetails?.state ?? ""
+                        }, ${userDetails?.zip ?? ""}`,
+                        `${clientDetails?.city ?? ""}, ${
+                            clientDetails?.state ?? ""
+                        }, ${clientDetails?.zip ?? ""}`,
                     ],
                     [userDetails?.country ?? "", clientDetails?.country ?? ""],
                 ],

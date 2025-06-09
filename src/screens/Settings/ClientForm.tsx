@@ -8,9 +8,10 @@ import {
 } from "react-bootstrap";
 import { updateClientDetails } from "../../api";
 import { useAuth } from "../../contexts/auth";
+import { ClientDetails } from "../../api/models";
 
 export default function ClientForm(): ReactElement {
-    const { clientDetails, setUpdateDetailsFlag } = useAuth();
+    const { clientDetails, refetchData } = useAuth();
     const [loading, setLoading] = useState<boolean>(false);
     const [validated, setValidated] = useState<boolean>(false);
 
@@ -30,16 +31,18 @@ export default function ClientForm(): ReactElement {
         setLoading(true);
 
         const formData = new FormData(form);
-        const data = {} as any;
-
-        formData.entries().forEach((entry) => {
-            const [key, value] = entry;
-            data[key] = value;
-        });
+        const data: ClientDetails = {
+            name: formData.get("name") as string,
+            address: formData.get("address") as string,
+            city: formData.get("city") as string,
+            country: formData.get("country") as string,
+            state: formData.get("state") as string,
+            zip: formData.get("zip") as string,
+        };
 
         try {
             await updateClientDetails(data);
-            setUpdateDetailsFlag(true);
+            refetchData();
         } catch (error) {
             console.error(error);
         } finally {

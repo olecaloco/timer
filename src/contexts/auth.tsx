@@ -1,6 +1,5 @@
 import {
     createContext,
-    Dispatch,
     PropsWithChildren,
     ReactElement,
     useContext,
@@ -10,46 +9,72 @@ import {
 } from "react";
 import { Unsubscribe, User } from "firebase/auth";
 import { ClientDetails, UserDetails } from "../api/models";
-import { getClientDetails, getUserDetails } from "../api";
 
 export interface AuthContextProps {
     user: User | null;
-    loading: boolean;
     userDetails: UserDetails | null;
     clientDetails: ClientDetails | null;
-    setUpdateDetailsFlag: Dispatch<boolean>;
+    refetchData: () => void;
 }
 
 const AuthContext = createContext<AuthContextProps>({
     user: null,
-    loading: false,
     userDetails: null,
     clientDetails: null,
-    setUpdateDetailsFlag: (update: boolean) => {},
+    refetchData: () => {},
 });
 
 interface Props extends PropsWithChildren {}
 
 export default function AuthProvider(props: Props): ReactElement {
     const [user, setUser] = useState<User | null>(null);
-    const [updateDetailsFlag, setUpdateDetailsFlag] = useState<boolean>(false);
+    const [refetch, setRefetch] = useState<boolean>(false);
     const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
     const [clientDetails, setClientDetails] = useState<ClientDetails | null>(
         null
     );
-    const [loading, setLoading] = useState<boolean>(true);
     const { children } = props;
+
+    const fetchUserDetails = async () => {
+        try {
+            const { getUserDetails } = await import("../api");
+            const snapshot = await getUserDetails();
+
+            if (!snapshot.exists()) {
+                setUserDetails(null);
+                return;
+            }
+
+            const data = snapshot.data() as UserDetails;
+            setUserDetails(data);
+        } catch (error: any) {
+            console.warn(error);
+        }
+    };
+
+    const fetchClientDetails = async () => {
+        try {
+            const { getClientDetails } = await import("../api");
+            const snapshot = await getClientDetails();
+
+            if (!snapshot.exists()) {
+                setClientDetails(null);
+                return;
+            }
+
+            const data = snapshot.data() as ClientDetails;
+            setClientDetails(data);
+        } catch (error: any) {
+            console.warn(error);
+        }
+    };
 
     useEffect(() => {
         const watcher = async () => {
             const { onAuthStateChanged } = await import("firebase/auth");
             const { auth } = await import("../firebase");
 
-            return onAuthStateChanged(auth, (userState) => {
-                setUser(userState);
-                setLoading(false);
-                setUpdateDetailsFlag(true);
-            });
+            return onAuthStateChanged(auth, setUser);
         };
 
         let unsub: Unsubscribe | undefined;
@@ -65,38 +90,20 @@ export default function AuthProvider(props: Props): ReactElement {
     }, []);
 
     useEffect(() => {
-        if (!updateDetailsFlag || !user) return;
+        if (!user) return;
 
-        getUserDetails().then((snapshot) => {
-            if (!snapshot.exists()) {
-                setUserDetails(null);
-            } else {
-                const details = snapshot.data() as UserDetails;
-                setUserDetails(details);
-            }
-        });
-
-        getClientDetails().then((snapshot) => {
-            if (!snapshot.exists()) {
-                setClientDetails(null);
-            } else {
-                const details = snapshot.data() as ClientDetails;
-                setClientDetails(details);
-            }
-        });
-
-        setUpdateDetailsFlag(false);
-    }, [updateDetailsFlag, user]);
+        void fetchUserDetails();
+        void fetchClientDetails();
+    }, [refetch, user]);
 
     const value = useMemo(
         () => ({
             user,
             userDetails,
             clientDetails,
-            loading,
-            setUpdateDetailsFlag,
+            refetchData: () => setRefetch((prev) => !prev),
         }),
-        [user, userDetails, clientDetails, loading, setUpdateDetailsFlag]
+        [user, userDetails, clientDetails]
     );
 
     return (
